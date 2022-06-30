@@ -1,4 +1,5 @@
 // Explorer-1 runfile
+CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
 
 runOncePath("0:/gui.ks").
 runOncePath("0:/staging.ks").
@@ -22,8 +23,8 @@ lock steering to heading(rotation, pitch).
 lock throttle to thr.
 
 local yaw_control_pid is pidLoop(0.1, 0.005, 0.005, -0.1, 0.1).
-local roll_control_pid is pidLoop(0.1, 0.05, 0.1, -0.05, 0.05).
-local pitch_control_pid is pidLoop(0.01, 0.005, 0.005, -0.1, 0.1).
+local roll_control_pid is pidLoop(0.1, 0.005, 0.005, -0.01, 0.01).
+local pitch_control_pid is pidLoop(0.01, 0.01, 0.005, -0.1, 0.1).
 
 sas off.
 rcs off.
@@ -84,6 +85,7 @@ until runmode = "done" {
     if ship:altitude > 1000 {
       set ship:control:pitch to 0.
       set roll_control_pid:setpoint to 0. // heading = 30deg
+      set yaw_control_pid:setpoint to 0. // heading = 30deg
       set pitch_control_pid:setpoint to 20. // vspeed = 20m/s
       set runmode to "climb and vector".
     }
@@ -132,12 +134,8 @@ until runmode = "done" {
       }
     }
 
-    if r_error > 0 {
-      set ship:control:yaw to 0.1.
-    }
-    else {
-      set ship:control:yaw to -0.1.
-    }
+    // use yaw to rotate
+    set ship:control:yaw to yaw_control_pid:update(time:seconds, r_error).
 
     // check for course and altitude
     if compass_for(ship) = 30 and ship:altitude > 3000 {
