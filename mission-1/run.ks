@@ -66,32 +66,29 @@ until runmode = "done" {
   }
   else if runmode = "takeoff roll" {
     local y_pid_output is yaw_control_pid:update(time:seconds, compass_for(ship)).
-    // log time:seconds + " " + (compass_for(ship)-yaw_control_pid:setpoint) + " " + y_pid_output to "data.txt".
     set ship:control:wheelsteer to ship:control:wheelsteer + y_pid_output.
+
     if ship:velocity:surface:mag > 60 {
+      set ship:control:wheelsteer to 0.
       set roll_control_pid:setpoint to 90. // roll angle = 90deg
       set pitch_control_pid:setpoint to 20. // pitch angle = 20deg
-      set runmode to "ascent".
+      set runmode to "rotate".
     }
   }
-  else if runmode = "ascent" {
-    //local r_pid_output is roll_control_pid:update(time:seconds, compass_for(ship)).
-    //set ship:control:roll to ship:control:roll + r_pid_output.
-
+  else if runmode = "rotate" {
     // maitain pitch for rotation ascent
     local p_pid_output to pitch_control_pid:update(time:seconds, pitch_for(ship)).
     set ship:control:pitch to ship:control:pitch + p_pid_output.
 
     // check for rotate finish
     if ship:altitude > 1000 {
-      set ship:control:roll to 0.
       set ship:control:pitch to 0.
       set roll_control_pid:setpoint to 0. // heading = 30deg
       set pitch_control_pid:setpoint to 20. // vspeed = 20m/s
-      set runmode to "heading".
+      set runmode to "climb and vector".
     }
   }
-  else if runmode = "heading" {
+  else if runmode = "climb and vector" {
     // maitain vspeed
     local p_pid_output to pitch_control_pid:update(time:seconds, ship:verticalspeed).
     set ship:control:pitch to ship:control:pitch + p_pid_output.
@@ -121,19 +118,33 @@ until runmode = "done" {
         set r_error to 360 - (r_target - r_current). // should go left
       }
     }
-    // set r_error to -r_error. // left is neg, right is pos
     local r_pid_output is roll_control_pid:update(time:seconds, r_error).
     log time:seconds + " " + r_error + " " + r_pid_output to "data.txt".
-    if roll_for(ship) < 35 and roll_for(ship) > -35 { // limit roll angle
+    if roll_for(ship) < 35 and roll_for(ship) > -35 { // limit bank angle
       set ship:control:roll to r_pid_output.
     }
+    else { // go smoothly to zero if bank angle is hard
+      if ship:control:roll > 0 {
+        set ship:control:roll to ship:control:roll - 0.01.
+      }
+      else {
+        set ship:control:roll to ship:control:roll + 0.01.
+      }
+    }
+
+    if r_error > 0 {
+      set ship:control:yaw to 0.1.
+    }
     else {
-      set ship:control:roll to 0.
+      set ship:control:yaw to -0.1.
     }
 
     // check for course and altitude
     if compass_for(ship) = 30 and ship:altitude > 3000 {
       set pitch_control_pid:setpoint to 0. // vspeed = 0m/s
+      set ship:control:pitch to 0.
+      set ship:control:yaw to 0.
+      set ship:control:roll to 0.
       set runmode to "on course".
     }
   }
