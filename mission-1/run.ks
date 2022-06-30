@@ -23,7 +23,7 @@ lock steering to heading(rotation, pitch).
 lock throttle to thr.
 
 local yaw_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
-local roll_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
+local roll_control_pid is pidLoop(0.1, 0.005, 0.5, -0.01, 0.01).
 local pitch_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
 
 sas off.
@@ -75,7 +75,7 @@ until runmode = "done" {
     }
   }
   else if runmode = "rotate" {
-    set ship:control:pitch to 0.6.
+    set ship:control:pitch to 0.4.
     wait 1.
 
     // check for rotate finish
