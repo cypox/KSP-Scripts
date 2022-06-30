@@ -23,8 +23,8 @@ lock steering to heading(rotation, pitch).
 lock throttle to thr.
 
 local yaw_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
-local roll_control_pid is pidLoop(0.1, 0.005, 0.5, -0.01, 0.01).
-local pitch_control_pid is pidLoop(0.01, 0.005, 0.05, -0.01, 0.01).
+local roll_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
+local pitch_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
 
 sas off.
 rcs off.
@@ -71,17 +71,19 @@ until runmode = "done" {
 
     if ship:velocity:surface:mag > 60 {
       set ship:control:wheelsteer to 0.
-      set pitch_control_pid:setpoint to 20. // pitch angle = 20deg
       set runmode to "rotate".
     }
   }
   else if runmode = "rotate" {
-    // maitain pitch for rotation ascent
-    local p_pid_output to pitch_control_pid:update(time:seconds, pitch_for(ship)).
-    set ship:control:pitch to ship:control:pitch + p_pid_output.
+    set ship:control:pitch to 0.6.
+    wait 1.
 
     // check for rotate finish
-    if ship:altitude > 1000 {
+    if ship:altitude > 100 {
+      announce_tr("POSITIVE RATE.").
+      wait 1.
+      announce_tr("GEAR UP.").
+      wait 1.
       set ship:control:pitch to 0.
       set roll_control_pid:setpoint to 0. // heading = 30deg
       set yaw_control_pid:setpoint to 0. // heading = 30deg
