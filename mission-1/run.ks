@@ -22,9 +22,9 @@ local thr is 0.
 lock steering to heading(rotation, pitch).
 lock throttle to thr.
 
-local yaw_control_pid is pidLoop(0.1, 0.005, 0.005, -0.005, 0.005).
-local roll_control_pid is pidLoop(0.1, 0.005, 0.005, -0.01, 0.01).
-local pitch_control_pid is pidLoop(0.01, 0.005, 0.005, -0.01, 0.01).
+local yaw_control_pid is pidLoop(0.1, 0.005, 0.05, -0.005, 0.005).
+local roll_control_pid is pidLoop(0.1, 0.005, 0.05, -0.01, 0.01).
+local pitch_control_pid is pidLoop(0.01, 0.005, 0.05, -0.01, 0.01).
 
 sas off.
 rcs off.
@@ -71,7 +71,6 @@ until runmode = "done" {
 
     if ship:velocity:surface:mag > 60 {
       set ship:control:wheelsteer to 0.
-      set roll_control_pid:setpoint to 90. // roll angle = 90deg
       set pitch_control_pid:setpoint to 20. // pitch angle = 20deg
       set runmode to "rotate".
     }
