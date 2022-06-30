@@ -5,11 +5,12 @@ runOncePath("0:/gui.ks").
 runOncePath("0:/staging.ks").
 runOncePath("0:/KSLib/library/lib_navball.ks").
 
+// TODO: SET HEADING AND ALTITUDE TO WAYPOINT
 
 clearscreen.
 
-global runmode is "countdown".
-on AG1 set runmode to "done".
+global runmode is "idle".
+on AG1 set runmode to "countdown".
 
 local start_time is time:seconds.
 
@@ -25,6 +26,7 @@ lock throttle to thr.
 local yaw_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
 local roll_control_pid is pidLoop(0.1, 0.005, 0.5, -0.01, 0.01).
 local pitch_control_pid is pidLoop(0.1, 0.005, 0.5, -0.005, 0.005).
+local centerline_pid is pidloop().
 
 sas off.
 rcs off.
@@ -52,7 +54,6 @@ print " +---------------------+    +--------------------+".
 print " |                     |    |                    |".
 print " +---------------------+    +--------------------+".
 print " ".
-print "Use Action group 1 to stop the autopilot.".
 
 until runmode = "done" {
   if runmode = "countdown" {
@@ -62,21 +63,24 @@ until runmode = "done" {
   else if runmode = "engine start" {
     set thr to 1.
     set staging to true.
-    set yaw_control_pid:setpoint to 90.
+    set centerline_pid to pidLoop(0.1, 0.005, 0.5, -0.005, 0.005, 10).
+    set centerline_pid:setpoint to 90.
     set runmode to "takeoff roll".
   }
   else if runmode = "takeoff roll" {
-    local y_pid_output is yaw_control_pid:update(time:seconds, compass_for(ship)).
-    set ship:control:wheelsteer to ship:control:wheelsteer + y_pid_output.
+    local y_pid_output is centerline_pid:update(time:seconds, compass_for(ship)).
+    set ship:control:wheelsteer to y_pid_output.
 
     if ship:velocity:surface:mag > 60 {
       set ship:control:wheelsteer to 0.
+      set pitch_control_pid:setpoint to 20. // vspeed = 20m/s
       set runmode to "rotate".
     }
   }
   else if runmode = "rotate" {
-    set ship:control:pitch to 0.4.
-    wait 1.
+    // maitain vspeed
+    local p_pid_output to pitch_control_pid:update(time:seconds, ship:verticalspeed).
+    set ship:control:pitch to ship:control:pitch + p_pid_output.
 
     // check for rotate finish
     if ship:altitude > 100 {
