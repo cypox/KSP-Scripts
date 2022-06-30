@@ -15,8 +15,8 @@ kp = ki = kd = 0
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 
-ax1.plot(dt[:,0], dt[:,1], c='r', label='Output')
-ax1.plot(dt[:,0], dt[:,2], c='g', label='Error')
+ax1.plot(dt[:,0], dt[:,1]/180, c='r', label='Error')
+ax1.plot(dt[:,0], dt[:,2], c='g', label='Output')
 
 ax1.set_title(f"Pitch PID Controller (Kp: {kp}, Ki: {ki}, Kd: {kd})")
 ax1.set_xlabel('Time')
