@@ -22,7 +22,7 @@ lock steering to heading(rotation, pitch).
 lock throttle to thr.
 
 local yaw_control_pid is pidLoop(0.1, 0.005, 0.005, -0.1, 0.1).
-local roll_control_pid is pidLoop(0.05, 0.005, 0.1, -0.05, 0.05).
+local roll_control_pid is pidLoop(0.1, 0.05, 0.1, -0.05, 0.05).
 local pitch_control_pid is pidLoop(0.01, 0.005, 0.005, -0.1, 0.1).
 
 sas off.
@@ -125,10 +125,10 @@ until runmode = "done" {
     }
     else { // go smoothly to zero if bank angle is hard
       if ship:control:roll > 0 {
-        set ship:control:roll to ship:control:roll - 0.01.
+        set ship:control:roll to ship:control:roll - 0.005.
       }
       else {
-        set ship:control:roll to ship:control:roll + 0.01.
+        set ship:control:roll to ship:control:roll + 0.005.
       }
     }
 
