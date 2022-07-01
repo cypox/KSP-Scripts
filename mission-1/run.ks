@@ -13,8 +13,6 @@ global runmode is "idle".
 on AG1 set runmode to "countdown".
 on AG2 set runmode to "idle".
 
-local start_time is time:seconds.
-
 local wpt is allwaypoints()[0]. // target waypoint
 lock wpt_vector to wpt:position - ship:position.
 
@@ -39,23 +37,8 @@ rcs off.
 
 init_staging_logic().
 
-// setup_hud().
-print "                       Flight Control Panel".
-print " ".
-print " +------------------------+ +--------------------+".
-print " | Runmode =              | | Time =           s |".
-print " +------------------------+ +--------------------+".
-print " ".
-print " +---------------------+    +--------------------+".
-print " | Heading =         ° |    | Pitch  =         ° |".
-print " | Roll    =         ° |    |                    |".
-print " +---------------------+    +--------------------+".
-print " ".
-print " +---------------------+    +--------------------+".
-print " | Speed    =       m/s|    | VSpeed =        m/s|".
-print " | Altitude =        m |    |                    |".
-print " +---------------------+    +--------------------+".
-print " ".
+setup_hud().
+// wpt realtive readouts
 print " +---------------------+    +--------------------+".
 print " | Wpt Hdg =         ° |    | Dist. =          m |".
 print " +---------------------+    +--------------------+".
@@ -115,10 +98,8 @@ until runmode = "done" {
     local p_pid_output to pitch_control_pid:update(time:seconds, ship:verticalspeed).
     set ship:control:pitch to ship:control:pitch + p_pid_output.
 
-    // get angle to waypoint
-    local r_target is vang(ship:facing:forevector, wpt_vector).
-
     // go to course
+    local r_target is 30. // go to a given heading (30deg)
     local r_current is compass_for(ship).
     local r_error is 0.
     if r_target < 180 {
@@ -143,22 +124,31 @@ until runmode = "done" {
       }
     }
     // local r_pid_output is roll_control_pid:update(time:seconds, r_error). // use this to go to a given course
-    local r_pid_output is roll_control_pid:update(time:seconds, compass_for(ship)). // use this to go to a given target
+
+    // use yaw to rotate to the given course
+    // set ship:control:yaw to yaw_control_pid:update(time:seconds, r_error). // us this to go to a given course with roll
+
+    // get angle to waypoint
+    set r_target to vang(ship:facing:forevector, wpt_vector).
+    local r_pid_output is roll_control_pid:update(time:seconds, r_target). // use this to go to a given target
+
+    set ship:control:yaw to yaw_control_pid:update(time:seconds, r_target).
+
     log time:seconds + " " + r_error + " " + r_pid_output to "data.txt".
     if roll_for(ship) < 35 and roll_for(ship) > -35 { // limit bank angle
       set ship:control:roll to r_pid_output.
     }
     else { // go smoothly to zero if bank angle is hard
       if ship:control:roll > 0 {
-        set ship:control:roll to ship:control:roll - 0.005.
+        //set ship:control:roll to ship:control:roll - 0.005.
+        set ship:control:roll to 0.
       }
       else {
         set ship:control:roll to ship:control:roll + 0.005.
+        set ship:control:roll to 0.
       }
     }
 
-    // use yaw to rotate
-    set ship:control:yaw to yaw_control_pid:update(time:seconds, r_error).
 
     // check for course and altitude
     if compass_for(ship) = 30 and ship:altitude > 3000 {
@@ -186,19 +176,10 @@ until runmode = "done" {
   clearVecDraws().
   draw_from_to(ship:position, wpt:position).
 
-  // update_readouts().
-  print runmode at (13, 3).
-  print round(time:seconds-start_time, 0) + "    " at (37, 3).
-
-  print round(compass_for(ship), 0) + "  " at (15, 7).
-  print round(roll_for(ship), 0) + "  " at (15, 8).
-  print round(pitch_for(ship), 0) + "  " at (40, 7).
-
-  print round(ship:velocity:surface:mag, 0) + "  " at (15, 12).
-  print round(ship:altitude, 0) + "  " at (15, 13).
-  print round(verticalSpeed, 0) + "  " at (40, 12).
-
+  update_readouts().
+  // wpt relative readouts
   print round(vang(ship:facing:forevector, wpt_vector), 0) + "  " at (15, 17).
   print round(wpt:geoposition:distance, 0) + "  " at (38, 17).
+
   wait 0.
 }

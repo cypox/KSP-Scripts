@@ -10,6 +10,8 @@ local size is 45.
 local colour is RGBA(1, 0.2, 0.2, 1).
 local echo is false.
 
+local start_time is 0.
+
 function countdown {
   HUDTEXT("5", delay, style, size, colour, echo).
   wait 1.
@@ -55,53 +57,34 @@ function enable_readouts {
 
 function setup_hud {
   clearscreen.
-  PRINT " Current Mode =" AT (1,0).
-  PRINT "==================================================" AT (0,2).
-  PRINT "Sea Lvl.        | Ground         | Orbit" AT (0,3).
-  PRINT "  Alt.          |  Dist.         | Incl." AT (0,4).
-  PRINT "  [km]          |  [km]          | [deg]" AT (0,5).
-  PRINT "----------------+----------------+----------------" AT (0,6).
-  PRINT "Apoap.          |Periap.         |  TWR" AT (0,7).
-  PRINT " [km]           | [km]           |Max TWR" AT (0,8).
-  PRINT " (ETA)          | (ETA)          |% Term V" AT (0,9).
-  PRINT "----------------+----------------+----------------" AT (0,10).
-  PRINT " Total          | Stage          | Spent" AT (0,11).
-  PRINT "Vac. dV         |  dV            |  dV" AT (0,12).
-  PRINT " [m/s]          | [m/s]          | [m/s]" AT (0,13).
-  PRINT "==================================================" AT (0,14).
+  print "               Flight Control Panel               ".
+  print " ".
+  print " +------------------------+ +--------------------+".
+  print " | Runmode =              | | Time =           s |".
+  print " +------------------------+ +--------------------+".
+  print " ".
+  print " +---------------------+    +--------------------+".
+  print " | Heading =         ° |    | Pitch  =         ° |".
+  print " | Roll    =         ° |    |                    |".
+  print " +---------------------+    +--------------------+".
+  print " ".
+  print " +---------------------+    +--------------------+".
+  print " | Speed    =       m/s|    | VSpeed =        m/s|".
+  print " | Altitude =        m |    |                    |".
+  print " +---------------------+    +--------------------+".
+  print " ".
+  set start_time to time:seconds.
 }
 
 function update_readouts {
-  PRINT RUNMODE at (18,0).
-  PRINT ROUND(ALTITUDE/1000,2)+" "   AT (8,4).
-  //SET downRangeDist TO SQRT(launchLoc:Distance^2 - (ALTITUDE-launchAlt)^2). // #@ should update to use curvature
-  //PRINT ROUND(downRangeDist/1000,2)+" " AT (25,4).
-  PRINT ROUND(SHIP:OBT:INCLINATION,1)+"  " AT (44,4).
-  PRINT ROUND(APOAPSIS/1000,2)+" " AT (8,8).
-  PRINT ROUND(ETA:APOAPSIS) + "s " AT (9,9).
-  PRINT ROUND(PERIAPSIS/1000,2)+"  " AT (24,8).
-  PRINT ROUND(ETA:PERIAPSIS) + "s " AT (26,9).
-  //SET engInfo TO activeEngineInfo().
-  //SET currentTWR TO engInfo[0]/(SHIP:MASS*BODY:MU/(ALTITUDE+BODY:RADIUS)^2).
-  //SET maxTWR TO engInfo[1]/(SHIP:MASS*BODY:MU/(ALTITUDE+BODY:RADIUS)^2).
-  //PRINT ROUND(currentTWR,2)+"   " AT (44,7).
-  //PRINT ROUND(maxTWR,2) + "  " AT (44,8).
-  //IF pctTerminalVel = "N/A" OR pctTerminalVel = "NoAcc" {
-  //    PRINT pctTerminalVel + "  " AT (44,9).
-  //}.
-  //ELSE {
-  //    PRINT ROUND(pctTerminalVel,0) + "  " AT (44,9).
-  //}.
-  SET shipDeltaV TO "TBD". // ## TODO
-  PRINT shipDeltaV AT (9,12).
-  //SET stageDeltaV TO deltaVStage().
-  //PRINT ROUND(stageDeltaV)+" " AT (26,12).
-  //IF lastDVTime < TIME:SECONDS AND finalBurnTime = 0 {
-  //    SET dVSpent TO dVSpent + ((engInfo[0]/SHIP:MASS) * (TIME:SECONDS - lastDVTime)).
-  //    SET lastDVTime TO TIME:SECONDS.
-  //}
-  //ELSE IF finalBurnTime > 0 {
-  //    SET dVSpent TO dVSpent + ((engInfo[1]/SHIP:MASS) * finalBurnTime).
-  //}.
-  //PRINT ROUND(dVSpent,0) + "   " AT (44,12).
+  print runmode at (13, 3).
+  print round(time:seconds-start_time, 0) + "    " at (37, 3).
+
+  print round(compass_for(ship), 0) + "  " at (15, 7).
+  print round(roll_for(ship), 0) + "  " at (15, 8).
+  print round(pitch_for(ship), 0) + "  " at (40, 7).
+
+  print round(ship:velocity:surface:mag, 0) + "  " at (15, 12).
+  print round(ship:altitude, 0) + "  " at (15, 13).
+  print round(verticalSpeed, 0) + "  " at (40, 12).
 }
