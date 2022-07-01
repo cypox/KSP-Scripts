@@ -11,10 +11,16 @@ clearscreen.
 
 global runmode is "idle".
 on AG1 set runmode to "countdown".
+on AG2 set runmode to "idle".
 
 local start_time is time:seconds.
 
+local wpt is allwaypoints()[0]. // target waypoint
+lock wpt_vector to wpt:position - ship:position.
+
 deletepath("data.txt").
+
+local v1 is 60.
 
 local pitch is 0.
 local rotation is 90.
@@ -36,9 +42,9 @@ init_staging_logic().
 // setup_hud().
 print "                       Flight Control Panel".
 print " ".
-print " +-----------------------------------------------+".
-print " | Runmode =                  Time =           s |".
-print " +-----------------------------------------------+".
+print " +------------------------+ +--------------------+".
+print " | Runmode =              | | Time =           s |".
+print " +------------------------+ +--------------------+".
 print " ".
 print " +---------------------+    +--------------------+".
 print " | Heading =         ° |    | Pitch  =         ° |".
@@ -51,12 +57,18 @@ print " | Altitude =        m |    |                    |".
 print " +---------------------+    +--------------------+".
 print " ".
 print " +---------------------+    +--------------------+".
-print " |                     |    |                    |".
+print " | Wpt Hdg =         ° |    | Dist. =          m |".
 print " +---------------------+    +--------------------+".
 print " ".
 
 until runmode = "done" {
-  if runmode = "countdown" {
+  if runmode = "idle" {
+    set ship:control:yaw to 0.
+    set ship:control:roll to 0.
+    set ship:control:pitch to 0.
+    set ship:control:wheelsteer to 0.
+  }
+  else if runmode = "countdown" {
     countdown().
     set runmode to "engine start".
   }
@@ -71,10 +83,13 @@ until runmode = "done" {
     local y_pid_output is centerline_pid:update(time:seconds, compass_for(ship)).
     set ship:control:wheelsteer to y_pid_output.
 
-    if ship:velocity:surface:mag > 60 {
+    if ship:velocity:surface:mag > v1 {
+      announce_tr("V1.").
       set ship:control:wheelsteer to 0.
       set pitch_control_pid:setpoint to 20. // vspeed = 20m/s
       set runmode to "rotate".
+      wait 1.
+      announce_tr("ROTATE.").
     }
   }
   else if runmode = "rotate" {
@@ -100,8 +115,10 @@ until runmode = "done" {
     local p_pid_output to pitch_control_pid:update(time:seconds, ship:verticalspeed).
     set ship:control:pitch to ship:control:pitch + p_pid_output.
 
+    // get angle to waypoint
+    local r_target is vang(ship:facing:forevector, wpt_vector).
+
     // go to course
-    local r_target is 30.
     local r_current is compass_for(ship).
     local r_error is 0.
     if r_target < 180 {
@@ -125,7 +142,8 @@ until runmode = "done" {
         set r_error to 360 - (r_target - r_current). // should go left
       }
     }
-    local r_pid_output is roll_control_pid:update(time:seconds, r_error).
+    // local r_pid_output is roll_control_pid:update(time:seconds, r_error). // use this to go to a given course
+    local r_pid_output is roll_control_pid:update(time:seconds, compass_for(ship)). // use this to go to a given target
     log time:seconds + " " + r_error + " " + r_pid_output to "data.txt".
     if roll_for(ship) < 35 and roll_for(ship) > -35 { // limit bank angle
       set ship:control:roll to r_pid_output.
@@ -155,6 +173,7 @@ until runmode = "done" {
     // maitain vspeed
     local p_pid_output to pitch_control_pid:update(time:seconds, ship:verticalspeed).
     set ship:control:pitch to ship:control:pitch + p_pid_output.
+
     // maitain course
     local r_pid_output is roll_control_pid:update(time:seconds, compass_for(ship)).
     set ship:control:roll to ship:control:roll + r_pid_output.
@@ -162,6 +181,10 @@ until runmode = "done" {
   else {
     set runmode to "done".
   }
+
+  // update heading vector
+  clearVecDraws().
+  draw_from_to(ship:position, wpt:position).
 
   // update_readouts().
   print runmode at (13, 3).
@@ -174,5 +197,8 @@ until runmode = "done" {
   print round(ship:velocity:surface:mag, 0) + "  " at (15, 12).
   print round(ship:altitude, 0) + "  " at (15, 13).
   print round(verticalSpeed, 0) + "  " at (40, 12).
+
+  print round(vang(ship:facing:forevector, wpt_vector), 0) + "  " at (15, 17).
+  print round(wpt:geoposition:distance, 0) + "  " at (38, 17).
   wait 0.
 }
