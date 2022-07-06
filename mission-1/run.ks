@@ -3,7 +3,7 @@ CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
 
 runOncePath("0:/gui.ks").
 runOncePath("0:/staging.ks").
-runOncePath("0:/kslib/library/lib_navball.ks").
+runOncePath("0:/library/lib_navball.ks").
 
 // TODO: SET HEADING AND ALTITUDE TO WAYPOINT
 
