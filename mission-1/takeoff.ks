@@ -2,7 +2,7 @@
 
 runOncePath("0:/gui.ks").
 runOncePath("0:/staging.ks").
-runOncePath("0:/KSLib/library/lib_navball.ks").
+runOncePath("0:/kslib/library/lib_navball.ks").
 
 parameter target_altitude is 1000.
 parameter target_heading is 90.
