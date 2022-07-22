@@ -1,2 +1,2 @@
 switch to 0.
-run "scripts/takeoff.ks".
+runpath("scripts/type006.ks").
