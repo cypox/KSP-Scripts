@@ -57,22 +57,22 @@ function enable_readouts {
 
 function setup_hud {
   clearscreen.
-  print "               Flight Control Panel               ".
-  print " ".
-  print " +------------------------+ +--------------------+".
-  print " | Runmode =              | | Time =           s |".
-  print " +------------------------+ +--------------------+".
-  print " ".
-  print " +---------------------+    +--------------------+".
-  print " | Heading =         ° |    | Pitch  =         ° |".
-  print " | Roll    =         ° |    |                    |".
-  print " +---------------------+    +--------------------+".
-  print " ".
-  print " +---------------------+    +--------------------+".
-  print " | Speed    =       m/s|    | VSpeed =        m/s|".
-  print " | Altitude =        m |    |                    |".
-  print " +---------------------+    +--------------------+".
-  print " ".
+  print "               Flight Control Panel               " at (0, 0).
+  print "                                                  " at (0, 1).
+  print " +------------------------+ +--------------------+" at (0, 2).
+  print " | Runmode =              | | Time =           s |" at (0, 3).
+  print " +------------------------+ +--------------------+" at (0, 4).
+  print "                                                  " at (0, 5).
+  print " +---------------------+    +--------------------+" at (0, 6).
+  print " | Heading =         ° |    | Pitch  =         ° |" at (0, 7).
+  print " | Roll    =         ° |    |                    |" at (0, 8).
+  print " +---------------------+    +--------------------+" at (0, 9).
+  print "                                                  " at (0, 10).
+  print " +---------------------+    +--------------------+" at (0, 11).
+  print " | Speed    =       m/s|    | VSpeed =        m/s|" at (0, 12).
+  print " | Altitude =        m |    |                    |" at (0, 13).
+  print " +---------------------+    +--------------------+" at (0, 14).
+  print "                                                  " at (0, 15).
   set start_time to time:seconds.
 }
 
@@ -87,4 +87,22 @@ function update_readouts {
   print round(ship:velocity:surface:mag, 0) + "  " at (15, 12).
   print round(ship:altitude, 0) + "  " at (15, 13).
   print round(verticalSpeed, 0) + "  " at (40, 12).
+}
+
+function add_node_info {
+  print "                                                  " at (0, 23).
+  print " +---------------------+    +--------------------+" at (0, 23).
+  print " | Node in =         s |    | Dv  =           ms |" at (0, 24).
+  print " | Burn    =         s |    | vdot =          ms |" at (0, 25).
+  print " +---------------------+    +--------------------+" at (0, 26).
+}
+
+function update_node_info {
+  parameter burn_duration.
+  parameter vdot.
+
+  print nextnode:eta at (13, 24).
+  print round(nextnode:deltav:mag) at (37, 24).
+  print burn_duration at (13, 25).
+  print vdot at (38, 26).
 }
